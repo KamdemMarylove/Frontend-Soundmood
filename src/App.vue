@@ -1,6 +1,20 @@
 <script setup lang="ts">
 import { RouterLink, RouterView } from 'vue-router'
 import HelloWorld from './components/HelloWorld.vue'
+import { ref, onMounted } from 'vue'
+
+
+
+const songs = ref([])
+
+onMounted(async () => {
+  try {
+    const response = await fetch('https://soundmood-webtech-6.onrender.com')
+    songs.value = await response.json()
+  } catch (error) {
+    console.error('Fehler beim Laden der Songs:', error)
+  }
+})
 </script>
 
 <template>
