@@ -12,7 +12,7 @@ onMounted(async () => {
     const response = await fetch('https://soundmood-webtech-6.onrender.com')
     songs.value = await response.json()
   } catch (error) {
-    console.error('Fehler beim Laden der Songs:', error)
+    console.error('Fehler bei dem Laden der Songs:', error)
   }
 })
 </script>
