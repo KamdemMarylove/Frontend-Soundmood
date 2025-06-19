@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref } from 'vue'
 
 interface Song {
   title: string
@@ -7,116 +7,81 @@ interface Song {
   mood: string
 }
 
+const moods = ['happy', 'sad', 'relaxed', 'energetic', 'outgoing']
+const selectedMood = ref('')
 const songs = ref<Song[]>([])
-const newSong = ref<Song>({
-  title: '',
-  artist: '',
-  mood: ''
-})
 
-const fetchSongs = async () => {
+const fetchSongsByMood = async () => {
+  if (!selectedMood.value) return
+
   try {
-    const response = await fetch('https://soundmood-webtech-6.onrender.com/songs')
+    const response = await fetch(`https://soundmood-webtech-6.onrender.com/songs?mood=${selectedMood.value}`)
     songs.value = await response.json()
   } catch (error) {
     console.error('Fehler beim Laden der Songs:', error)
   }
 }
-
-const addSong = async () => {
-  try {
-    await fetch('https://soundmood-webtech-6.onrender.com/songs', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(newSong.value)
-    })
-    newSong.value = { title: '', artist: '', mood: '' }
-    fetchSongs()
-  } catch (error) {
-    console.error('Fehler beim Speichern des Songs:', error)
-  }
-}
-
-onMounted(fetchSongs)
 </script>
 
 <template>
   <header>
-    <img alt="Vue logo" class="logo" src="@/assets/logo.svg" width="125" height="125" />
-    <div class="wrapper">
-      <h1>🎵 SoundMood</h1>
-    </div>
+    <h1>🎵 Welcher Song passt zu deiner Stimmung?</h1>
   </header>
 
   <main>
     <section>
-      <h2>Neuen Song hinzufügen</h2>
-      <form @submit.prevent="addSong">
-        <input v-model="newSong.title" placeholder="Titel" required />
-        <input v-model="newSong.artist" placeholder="Künstler" required />
-        <input v-model="newSong.mood" placeholder="Stimmung (z. B. happy)" required />
-        <button type="submit">Song hinzufügen</button>
-      </form>
+      <p>Wie fühlst du dich gerade?</p>
+      <div class="mood-buttons">
+        <button v-for="mood in moods" :key="mood" @click="selectedMood = mood; fetchSongsByMood()">
+          {{ mood }}
+        </button>
+      </div>
     </section>
 
-    <section>
-      <h2>Song-Vorschläge</h2>
+    <section v-if="songs.length > 0">
+      <h2>Vorgeschlagene Songs für "{{ selectedMood }}"</h2>
       <ul>
         <li v-for="song in songs" :key="song.title">
-          {{ song.title }} – {{ song.artist }} ({{ song.mood }})
+          🎧 {{ song.title }} – {{ song.artist }}
         </li>
       </ul>
+    </section>
+
+    <section v-else-if="selectedMood">
+      <p>Keine Songs gefunden für "{{ selectedMood }}".</p>
     </section>
   </main>
 </template>
 
 <style scoped>
 header {
-  line-height: 1.5;
-  max-height: 100vh;
   text-align: center;
-  margin-bottom: 2rem;
-}
-
-.logo {
-  display: block;
-  margin: 0 auto 1rem;
-}
-
-.wrapper h1 {
-  font-size: 1.8rem;
-  font-weight: bold;
+  margin: 2rem 0;
 }
 
 main {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 0 1rem;
 }
 
-form {
+.mood-buttons {
   display: flex;
-  flex-direction: column;
-  max-width: 300px;
-  gap: 0.5rem;
+  gap: 1rem;
+  flex-wrap: wrap;
+  justify-content: center;
   margin: 1rem 0;
-  width: 100%;
-}
-
-input {
-  padding: 0.5rem;
-  font-size: 1rem;
 }
 
 button {
-  padding: 0.5rem;
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
   background-color: #42b983;
   color: white;
   border: none;
+  border-radius: 8px;
   cursor: pointer;
-  font-weight: bold;
-  transition: background-color 0.3s ease;
+  transition: background 0.3s ease;
 }
 
 button:hover {
@@ -126,7 +91,7 @@ button:hover {
 ul {
   list-style: none;
   padding: 0;
-  margin: 1rem 0;
+  margin-top: 1rem;
 }
 
 li {
