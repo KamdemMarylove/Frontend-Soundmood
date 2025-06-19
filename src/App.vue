@@ -4,8 +4,13 @@ import HelloWorld from './components/HelloWorld.vue'
 import { ref, onMounted } from 'vue'
 
 
+interface SongItem {
+  title: string
+  artist: string
+  mood: string
+}
 
-const songs = ref([])
+const songs = ref<SongItem[]>([])
 
 onMounted(async () => {
   try {
