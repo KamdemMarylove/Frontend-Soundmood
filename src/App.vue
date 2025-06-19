@@ -9,7 +9,7 @@ const songs = ref([])
 
 onMounted(async () => {
   try {
-    const response = await fetch('https://soundmood-webtech-6.onrender.com')
+    const response = await fetch('https://soundmood-webtech-6.onrender.com/mood')
     songs.value = await response.json()
   } catch (error) {
     console.error('Fehler bei dem Laden der Songs:', error)
@@ -32,6 +32,12 @@ onMounted(async () => {
   </header>
 
   <RouterView />
+  <ul>
+    <li v-for="song in songs" :key="song.title">
+      {{ song.title }} – {{ song.artist }} ({{ song.mood }})
+    </li>
+  </ul>
+
 </template>
 
 <style scoped>
