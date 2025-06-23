@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { RouterView, RouterLink } from 'vue-router'
+import { RouterLink, RouterView } from 'vue-router'
 </script>
 
 <template>
@@ -18,10 +18,16 @@ import { RouterView, RouterLink } from 'vue-router'
 
 <style scoped>
 header {
-  padding: 1rem;
-  background-color: #42b983;
+  background-color: #ff6b9e;
   color: white;
+  padding: 1.5rem 1rem;
   text-align: center;
+  border-bottom: 4px solid #ffd4e2;
+}
+
+h1 {
+  margin: 0;
+  font-size: 2rem;
 }
 
 nav {
@@ -33,8 +39,9 @@ nav {
 
 a {
   color: white;
-  text-decoration: none;
   font-weight: bold;
+  text-decoration: none;
+  transition: 0.2s;
 }
 
 a.router-link-exact-active {
@@ -43,5 +50,7 @@ a.router-link-exact-active {
 
 main {
   padding: 2rem;
+  background-color: #fff;
+  min-height: 80vh;
 }
 </style>
