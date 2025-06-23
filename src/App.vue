@@ -20,18 +20,18 @@ import { RouterLink, RouterView } from 'vue-router'
 header {
   background-color: #ff6b9e;
   color: white;
-  padding: 1.5rem 1rem;
+  padding: 1rem;
   text-align: center;
-  border-bottom: 4px solid #ffd4e2;
+  border-bottom: 3px solid #ffd4e2;
 }
 
 h1 {
-  margin: 0;
-  font-size: 2rem;
+  font-size: 1.8rem;
+  margin: 0.2rem 0;
 }
 
 nav {
-  margin-top: 1rem;
+  margin-top: 0.5rem;
   display: flex;
   justify-content: center;
   gap: 2rem;
@@ -49,8 +49,11 @@ a.router-link-exact-active {
 }
 
 main {
-  padding: 2rem;
-  background-color: #fff;
+  padding: 3rem 1rem;
   min-height: 80vh;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
 }
 </style>
+

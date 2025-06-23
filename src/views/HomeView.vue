@@ -102,6 +102,16 @@ const submitSuggestion = async () => {
   text-align: center;
   max-width: 700px;
   margin: auto;
+  .home {
+    text-align: center;
+    max-width: 700px;
+    margin: auto;
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    margin-top: 3rem;
+  }
 }
 
 .button-group {
