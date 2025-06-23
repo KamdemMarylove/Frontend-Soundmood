@@ -7,15 +7,26 @@ interface Song {
   mood: string
 }
 
+interface MoodEntry {
+  date: string
+  mood: string
+  song: {
+    title: string
+    artist: string
+  }
+}
+
 const moods = ['happy', 'sad', 'relaxed', 'energetic', 'outgoing']
 const selectedMood = ref('')
 const songs = ref<Song[]>([])
 
 const showForm = ref(false)
 const newSuggestion = ref({ title: '', artist: '' })
-const newSuggestionMood = ref('happy') // dropdown-Auswahl
+const newSuggestionMood = ref('happy')
 
-// Stimmungseintrag speichern
+const weekEntries = ref<MoodEntry[]>([])
+
+// Stimmung speichern
 const saveMoodEntry = async (mood: string, song: Song) => {
   try {
     await fetch('https://soundmood-webtech-6.onrender.com/entries', {
@@ -69,10 +80,27 @@ const submitSuggestion = async () => {
   }
 }
 
-// Beim Laden: automatisch "happy" laden
+// Mood-Entries dieser Woche laden
+const fetchWeekEntries = async () => {
+  try {
+    const response = await fetch('https://soundmood-webtech-6.onrender.com/entries/week')
+    weekEntries.value = await response.json()
+  } catch (error) {
+    console.error('Fehler beim Laden der Wochenstimmungen:', error)
+  }
+}
+
+// Wochentag aus Datum
+const getDayName = (dateStr: string) => {
+  const date = new Date(dateStr)
+  return date.toLocaleDateString('de-DE', { weekday: 'long' })
+}
+
+// Seite initial laden
 onMounted(() => {
   selectedMood.value = 'happy'
   fetchSongsByMood()
+  fetchWeekEntries()
 })
 </script>
 
@@ -121,6 +149,17 @@ onMounted(() => {
         </select>
         <button type="submit">Vorschlag senden</button>
       </form>
+    </section>
+
+    <hr />
+
+    <section v-if="weekEntries.length">
+      <h2>🗓 Deine Stimmungen diese Woche</h2>
+      <ul>
+        <li v-for="entry in weekEntries" :key="entry.date">
+          {{ getDayName(entry.date) }} – {{ entry.mood }} – {{ entry.song.title }} ({{ entry.song.artist }})
+        </li>
+      </ul>
     </section>
   </main>
 </template>
