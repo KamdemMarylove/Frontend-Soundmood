@@ -65,8 +65,19 @@ const chartOptions = {
       display: true,
       text: 'Deine Stimmungsauswertung 🧠'
     }
+  },
+  scales: {
+    y: {
+      beginAtZero: true,
+      ticks: {
+        stepSize: 1, // 👉 Nur ganze Zahlen anzeigen
+        precision: 0 // 👉 keine Nachkommastellen
+      },
+      suggestedMax: Math.max(...Object.values(moodCounts.value), 5) + 1
+    }
   }
 }
+
 </script>
 
 <template>
