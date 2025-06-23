@@ -1,82 +1,114 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 
+interface Song {
+  title: string
+  artist: string
+  mood: string
+}
 
-// Stimmungsauswahl & Songs
+const moods = ['happy', 'sad', 'energetic', 'relaxed', 'holy', 'outgoing']
 const selectedMood = ref('')
-const moods = ['Happy', 'Sad', 'Energetic', 'Relaxed', 'Holy','Outgoing']
+const songs = ref<Song[]>([])
 
-const songs = ref([
-  { title: 'Happy', artist: 'Pharrell Williams', mood: 'Happy' },
-  { title: 'Someone Like You', artist: 'Adele', mood: 'Sad' },
-  { title: 'Stronger', artist: 'Kanye West', mood: 'Energetic' },
-  { title: 'Don’t Know Why', artist: 'Norah Jones', mood: 'Relaxed' },
-  { title: 'Firework', artist: 'Katy Perry', mood: 'Outgoing' },
-  { title: 'YESHUA-dance cruise', artist: 'Dj Bentoa', mood: 'Holy' }
-])
+const fetchSongsByMood = async () => {
+  if (!selectedMood.value) return
+  try {
+    const response = await fetch(`https://soundmood-webtech-6.onrender.com/songs?mood=${selectedMood.value}`)
+    const fetchedSongs = await response.json()
+    songs.value = fetchedSongs
 
-const filteredSongs = computed(() =>
-  selectedMood.value
-    ? songs.value.filter(song => song.mood === selectedMood.value)
-    : []
-)
+    if (fetchedSongs.length > 0) {
+      await saveMoodEntry(selectedMood.value, fetchedSongs[0])
+    }
+  } catch (error) {
+    console.error('Fehler beim Laden der Songs:', error)
+  }
+}
+
+const saveMoodEntry = async (mood: string, song: Song) => {
+  try {
+    await fetch('https://soundmood-webtech-6.onrender.com/entries', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mood, song })
+    })
+    console.log("Mood gespeichert:", mood)
+  } catch (error) {
+    console.error("Fehler beim Speichern des Mood-Entries:", error)
+  }
+}
 </script>
 
 <template>
-  <h1>Willkommen bei SoundMood 🙈 🎵</h1>
-  <div>
-    <h2>Wie fühlst du dich heute?:</h2>
+  <div class="container">
+    <h2>Wie fühlst du dich heute?</h2>
     <div class="button-group">
       <button
         v-for="mood in moods"
         :key="mood"
-        @click="selectedMood = mood"
+        @click="selectedMood = mood; fetchSongsByMood()"
         :class="{ active: selectedMood === mood }"
       >
         {{ mood }}
       </button>
     </div>
 
-    <div v-if="filteredSongs.length > 0">
+    <section v-if="songs.length > 0">
+      <h3>🎧 Passende Songs für "{{ selectedMood }}"</h3>
       <ul>
-        <h4>Das passt bestimmt zu deiner jetzigen Stimmung</h4>
-        <li v-for="song in filteredSongs" :key="song.title">
+        <li v-for="song in songs" :key="song.title">
           {{ song.title }} von {{ song.artist }}
         </li>
       </ul>
-    </div>
+    </section>
 
+    <p v-else-if="selectedMood">Keine Songs gefunden für "{{ selectedMood }}".</p>
   </div>
 </template>
 
 <style scoped>
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  text-align: center;
+}
+
 .button-group {
   display: flex;
-  justify-content:left;
-  gap: 1rem;
   flex-wrap: wrap;
-  margin: 4em 0;
-
+  gap: 1rem;
+  justify-content: center;
+  margin: 2rem 0;
 }
+
 button {
-  padding: 10px 16px;
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
   border: none;
+  border-radius: 6px;
   background-color: #eee;
   cursor: pointer;
-  border-radius: 5px;
-  transition: background-color 0.2s;
+  transition: 0.2s;
 }
 
-button {
-  margin-right: 30px;
+button.active {
+  background-color: #00c3ff;
+  color: white;
 }
 
 button:hover {
   background-color: #ccc;
 }
-button.active {
-  background-color: rgba(0, 217, 255, 0.8);
-  color: #ffffff;
+
+ul {
+  list-style: none;
+  padding: 0;
+  margin-top: 1rem;
+  font-size: 1.1rem;
+}
+
+li {
+  margin-bottom: 0.5rem;
 }
 </style>
-
