@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 
 interface Song {
   title: string
@@ -11,9 +11,11 @@ const moods = ['happy', 'sad', 'relaxed', 'energetic', 'outgoing']
 const selectedMood = ref('')
 const songs = ref<Song[]>([])
 
+const showForm = ref(false)
+const newSuggestion = ref({ title: '', artist: '' })
+
 const fetchSongsByMood = async () => {
   if (!selectedMood.value) return
-
   try {
     const response = await fetch(`https://soundmood-webtech-6.onrender.com/songs?mood=${selectedMood.value}`)
     songs.value = await response.json()
@@ -21,11 +23,36 @@ const fetchSongsByMood = async () => {
     console.error('Fehler beim Laden der Songs:', error)
   }
 }
+
+const submitSuggestion = async () => {
+  try {
+    await fetch('https://soundmood-webtech-6.onrender.com/songs', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title: newSuggestion.value.title,
+        artist: newSuggestion.value.artist,
+        mood: 'user' // oder z. B. "suggestion"
+      })
+    })
+    alert('Danke für deinen Vorschlag! 🎉')
+    newSuggestion.value = { title: '', artist: '' }
+    showForm.value = false
+  } catch (error) {
+    console.error('Fehler beim Vorschlag-Senden:', error)
+  }
+}
+
+// ✅ Fetch beim Start: lädt automatisch "happy"-Songs
+onMounted(() => {
+  selectedMood.value = 'happy'
+  fetchSongsByMood()
+})
 </script>
 
 <template>
   <header>
-    <h1>🎵 Welcher Song passt zu deiner Stimmung?</h1>
+    <h1>🎵 SoundMood – Finde deinen Song zur Stimmung</h1>
   </header>
 
   <main>
@@ -39,16 +66,30 @@ const fetchSongsByMood = async () => {
     </section>
 
     <section v-if="songs.length > 0">
-      <h2>Vorgeschlagene Songs für "{{ selectedMood }}"</h2>
+      <h2>🎧 Vorschläge für "{{ selectedMood }}"</h2>
       <ul>
         <li v-for="song in songs" :key="song.title">
-          🎧 {{ song.title }} – {{ song.artist }}
+          {{ song.title }} – {{ song.artist }}
         </li>
       </ul>
     </section>
 
     <section v-else-if="selectedMood">
       <p>Keine Songs gefunden für "{{ selectedMood }}".</p>
+    </section>
+
+    <hr />
+
+    <section>
+      <button @click="showForm = !showForm" class="suggestion-toggle">
+        Hilf uns, unsere App zu verbessern – schick uns Songvorschläge!
+      </button>
+
+      <form v-if="showForm" @submit.prevent="submitSuggestion">
+        <input v-model="newSuggestion.title" placeholder="Songtitel" required />
+        <input v-model="newSuggestion.artist" placeholder="Künstler" required />
+        <button type="submit">Vorschlag senden</button>
+      </form>
     </section>
   </main>
 </template>
@@ -63,6 +104,7 @@ main {
   display: flex;
   flex-direction: column;
   align-items: center;
+  padding: 0 1rem;
 }
 
 .mood-buttons {
@@ -86,6 +128,24 @@ button {
 
 button:hover {
   background-color: #369870;
+}
+
+.suggestion-toggle {
+  margin-top: 2rem;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  max-width: 300px;
+  width: 100%;
+}
+
+input {
+  padding: 0.5rem;
+  font-size: 1rem;
 }
 
 ul {
