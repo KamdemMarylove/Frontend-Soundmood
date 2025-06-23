@@ -11,6 +11,11 @@ const moods = ['happy', 'sad', 'energetic', 'relaxed', 'holy', 'outgoing']
 const selectedMood = ref('')
 const songs = ref<Song[]>([])
 
+const showForm = ref(false)
+const newSuggestion = ref({ title: '', artist: '' })
+const newSuggestionMood = ref('happy')
+
+// Songs passend zur Stimmung vom Backend holen
 const fetchSongsByMood = async () => {
   if (!selectedMood.value) return
   try {
@@ -26,6 +31,7 @@ const fetchSongsByMood = async () => {
   }
 }
 
+// Stimmung + Song abspeichern
 const saveMoodEntry = async (mood: string, song: Song) => {
   try {
     await fetch('https://soundmood-webtech-6.onrender.com/entries', {
@@ -33,16 +39,37 @@ const saveMoodEntry = async (mood: string, song: Song) => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ mood, song })
     })
-    console.log("Mood gespeichert:", mood)
   } catch (error) {
     console.error("Fehler beim Speichern des Mood-Entries:", error)
+  }
+}
+
+// Songvorschlag absenden
+const submitSuggestion = async () => {
+  try {
+    await fetch('https://soundmood-webtech-6.onrender.com/songs', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title: newSuggestion.value.title,
+        artist: newSuggestion.value.artist,
+        mood: newSuggestionMood.value
+      })
+    })
+    alert('Danke für deinen Vorschlag!')
+    newSuggestion.value = { title: '', artist: '' }
+    newSuggestionMood.value = 'happy'
+    showForm.value = false
+  } catch (error) {
+    console.error('Fehler beim Vorschlag-Senden:', error)
   }
 }
 </script>
 
 <template>
   <div class="container">
-    <h2>Wie fühlst du dich heute?</h2>
+    <h2>🎵 Wie fühlst du dich heute?</h2>
+
     <div class="button-group">
       <button
         v-for="mood in moods"
@@ -55,7 +82,7 @@ const saveMoodEntry = async (mood: string, song: Song) => {
     </div>
 
     <section v-if="songs.length > 0">
-      <h3>🎧 Passende Songs für "{{ selectedMood }}"</h3>
+      <h3>🎧 Songs für "{{ selectedMood }}"</h3>
       <ul>
         <li v-for="song in songs" :key="song.title">
           {{ song.title }} von {{ song.artist }}
@@ -64,6 +91,23 @@ const saveMoodEntry = async (mood: string, song: Song) => {
     </section>
 
     <p v-else-if="selectedMood">Keine Songs gefunden für "{{ selectedMood }}".</p>
+
+    <hr />
+
+    <section>
+      <button @click="showForm = !showForm">
+        {{ showForm ? 'Abbrechen' : 'Hilf uns mit einem Songvorschlag!' }}
+      </button>
+
+      <form v-if="showForm" @submit.prevent="submitSuggestion">
+        <input v-model="newSuggestion.title" placeholder="Songtitel" required />
+        <input v-model="newSuggestion.artist" placeholder="Künstler" required />
+        <select v-model="newSuggestionMood">
+          <option v-for="m in moods" :key="m" :value="m">{{ m }}</option>
+        </select>
+        <button type="submit">Absenden</button>
+      </form>
+    </section>
   </div>
 </template>
 
@@ -71,6 +115,7 @@ const saveMoodEntry = async (mood: string, song: Song) => {
 .container {
   max-width: 800px;
   margin: 0 auto;
+  padding: 2rem;
   text-align: center;
 }
 
@@ -90,6 +135,9 @@ button {
   background-color: #eee;
   cursor: pointer;
   transition: 0.2s;
+  min-width: 100px;
+  font-weight: bold;
+  text-transform: capitalize;
 }
 
 button.active {
@@ -101,11 +149,25 @@ button:hover {
   background-color: #ccc;
 }
 
+form {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+input, select {
+  padding: 0.5rem;
+  width: 250px;
+  font-size: 1rem;
+}
+
 ul {
   list-style: none;
   padding: 0;
-  margin-top: 1rem;
   font-size: 1.1rem;
+  margin-top: 1rem;
 }
 
 li {
