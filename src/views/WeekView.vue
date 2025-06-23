@@ -16,7 +16,10 @@ ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale)
 interface MoodEntry {
   date: string
   mood: string
-  song: { title: string, artist: string }
+  song: {
+    title: string
+    artist: string
+  }
 }
 
 const weekEntries = ref<MoodEntry[]>([])
@@ -67,7 +70,7 @@ const chartOptions = {
     <Bar :data="chartData" :options="chartOptions" />
 
     <ul>
-      <li v-for="entry in weekEntries" :key="entry.date">
+      <li v-for="entry in weekEntries" :key="entry.id">
         {{ new Date(entry.date).toLocaleDateString('de-DE') }} –
         <strong>{{ entry.mood }}</strong> –
         {{ entry.song.title }} von {{ entry.song.artist }}

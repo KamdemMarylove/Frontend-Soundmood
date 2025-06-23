@@ -15,6 +15,7 @@ const showForm = ref(false)
 const newSuggestion = ref({ title: '', artist: '' })
 const newSuggestionMood = ref('happy')
 
+// Hole Songs vom Backend nach Stimmung
 const fetchSongsByMood = async () => {
   if (!selectedMood.value) return
   try {
@@ -22,26 +23,20 @@ const fetchSongsByMood = async () => {
     const fetchedSongs = await response.json()
     songs.value = fetchedSongs
 
+    // Trage Stimmung + Song ein
     if (fetchedSongs.length > 0) {
-      await saveMoodEntry(selectedMood.value, fetchedSongs[0])
+      await fetch('https://soundmood-webtech-6.onrender.com/entries', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mood: selectedMood.value, song: fetchedSongs[0] })
+      })
     }
   } catch (error) {
-    console.error('Fehler beim Laden der Songs:', error)
+    console.error('Fehler beim Laden oder Speichern:', error)
   }
 }
 
-const saveMoodEntry = async (mood: string, song: Song) => {
-  try {
-    await fetch('https://soundmood-webtech-6.onrender.com/entries', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ mood, song })
-    })
-  } catch (error) {
-    console.error("Fehler beim Speichern des Mood-Entries:", error)
-  }
-}
-
+// Vorschlag absenden
 const submitSuggestion = async () => {
   try {
     await fetch('https://soundmood-webtech-6.onrender.com/songs', {
@@ -93,7 +88,7 @@ const submitSuggestion = async () => {
 
     <section class="vorschlag">
       <button @click="showForm = !showForm">
-        {{ showForm ? 'Abbrechen' : 'Hilf uns mit einem Songvorschlag!' }}
+        {{ showForm ? 'Abbrechen' : 'Songvorschlag machen' }}
       </button>
 
       <form v-if="showForm" @submit.prevent="submitSuggestion">
@@ -109,19 +104,12 @@ const submitSuggestion = async () => {
 </template>
 
 <style scoped>
-:root {
-  --rosa: #ff6b9e;
-  --rosa-dark: #e05589;
-  --bg: #fdfdfd;
-  --text: #333;
-}
-
 .home {
   max-width: 800px;
   margin: 0 auto;
   padding: 2rem;
   text-align: center;
-  color: var(--text);
+  color: #333;
 }
 
 h2, h3 {
@@ -141,7 +129,7 @@ button {
   font-size: 1rem;
   border: none;
   border-radius: 6px;
-  background-color: var(--rosa);
+  background-color: #ff6b9e;
   color: white;
   font-weight: bold;
   cursor: pointer;
@@ -151,7 +139,7 @@ button {
 }
 
 button:hover {
-  background-color: var(--rosa-dark);
+  background-color: #e05589;
 }
 
 button.active {
@@ -190,7 +178,7 @@ input, select {
 }
 
 .submit-button {
-  background-color: var(--rosa);
+  background-color: #ff6b9e;
   color: white;
 }
 

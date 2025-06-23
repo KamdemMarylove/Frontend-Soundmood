@@ -6,7 +6,9 @@
       <RouterLink to="/week">Meine Woche</RouterLink>
     </nav>
   </header>
-  <main><RouterView /></main>
+  <main>
+    <RouterView />
+  </main>
 </template>
 
 <script setup lang="ts">
@@ -32,7 +34,7 @@ header {
   color: white;
   padding: 1rem 2rem;
   text-align: center;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
 nav {
