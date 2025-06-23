@@ -14,16 +14,40 @@ const songs = ref<Song[]>([])
 const showForm = ref(false)
 const newSuggestion = ref({ title: '', artist: '' })
 
+// 🧠 Stimmung speichern
+const saveMoodEntry = async (mood: string, song: Song) => {
+  try {
+    await fetch('https://soundmood-webtech-6.onrender.com/entries', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        mood: mood,
+        song: song
+      })
+    })
+    console.log("Mood gespeichert:", mood)
+  } catch (error) {
+    console.error("Fehler beim Speichern des Mood-Entries:", error)
+  }
+}
+
+// 🎧 Songs laden
 const fetchSongsByMood = async () => {
   if (!selectedMood.value) return
   try {
     const response = await fetch(`https://soundmood-webtech-6.onrender.com/songs?mood=${selectedMood.value}`)
-    songs.value = await response.json()
+    const fetchedSongs = await response.json()
+    songs.value = fetchedSongs
+
+    if (fetchedSongs.length > 0) {
+      await saveMoodEntry(selectedMood.value, fetchedSongs[0])
+    }
   } catch (error) {
     console.error('Fehler beim Laden der Songs:', error)
   }
 }
 
+// 💌 Songvorschlag senden
 const submitSuggestion = async () => {
   try {
     await fetch('https://soundmood-webtech-6.onrender.com/songs', {
@@ -32,7 +56,7 @@ const submitSuggestion = async () => {
       body: JSON.stringify({
         title: newSuggestion.value.title,
         artist: newSuggestion.value.artist,
-        mood: 'user' // oder z. B. "suggestion"
+        mood: 'user'
       })
     })
     alert('Danke für deinen Vorschlag! 🎉')
@@ -43,7 +67,7 @@ const submitSuggestion = async () => {
   }
 }
 
-// ✅ Fetch beim Start: lädt automatisch "happy"-Songs
+// 📦 Seite lädt mit "happy"-Mood
 onMounted(() => {
   selectedMood.value = 'happy'
   fetchSongsByMood()
