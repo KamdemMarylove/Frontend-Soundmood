@@ -11,9 +11,12 @@ import {
   LinearScale
 } from 'chart.js'
 
+// Registrierung der ChartJS-Komponenten
 ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale)
 
+// ✨ TypeScript Interface MIT id-Feld
 interface MoodEntry {
+  id: number
   date: string
   mood: string
   song: {
@@ -25,6 +28,7 @@ interface MoodEntry {
 const weekEntries = ref<MoodEntry[]>([])
 const moodCounts = ref<Record<string, number>>({})
 
+// Daten vom Backend holen
 const fetchWeekEntries = async () => {
   try {
     const res = await fetch('https://soundmood-webtech-6.onrender.com/entries/week')
@@ -42,6 +46,7 @@ const fetchWeekEntries = async () => {
 }
 onMounted(fetchWeekEntries)
 
+// Daten für Diagramm vorbereiten
 const chartData = computed(() => ({
   labels: Object.keys(moodCounts.value),
   datasets: [{
