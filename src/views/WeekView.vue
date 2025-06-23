@@ -114,4 +114,17 @@ ul {
 li {
   margin: 0.5rem 0;
 }
+.week {
+  padding: 2rem;
+  max-width: 700px;
+  margin: 2rem auto 0 auto;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+li {
+  margin: 0.5rem 0;
+}
+
 </style>
