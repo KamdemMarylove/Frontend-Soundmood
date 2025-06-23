@@ -1,190 +1,56 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 
-interface Song {
-  title: string
-  artist: string
+interface MoodEntry {
+  date: string
   mood: string
-}
-
-const moods = ['happy', 'sad', 'energetic', 'relaxed', 'holy', 'outgoing']
-const selectedMood = ref('')
-const songs = ref<Song[]>([])
-
-const showForm = ref(false)
-const newSuggestion = ref({ title: '', artist: '' })
-const newSuggestionMood = ref('happy')
-
-// Hole Songs vom Backend nach Stimmung
-const fetchSongsByMood = async () => {
-  if (!selectedMood.value) return
-  try {
-    const response = await fetch(`https://soundmood-webtech-6.onrender.com/songs?mood=${selectedMood.value}`)
-    const fetchedSongs = await response.json()
-    songs.value = fetchedSongs
-
-    // Trage Stimmung + Song ein
-    if (fetchedSongs.length > 0) {
-      await fetch('https://soundmood-webtech-6.onrender.com/entries', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mood: selectedMood.value, song: fetchedSongs[0] })
-      })
-    }
-  } catch (error) {
-    console.error('Fehler beim Laden oder Speichern:', error)
+  song: {
+    title: string
+    artist: string
   }
 }
 
-// Vorschlag absenden
-const submitSuggestion = async () => {
+const weekEntries = ref<MoodEntry[]>([])
+
+const getDayName = (dateStr: string) => {
+  const date = new Date(dateStr)
+  return date.toLocaleDateString('de-DE', { weekday: 'long' })
+}
+
+const fetchWeekEntries = async () => {
   try {
-    await fetch('https://soundmood-webtech-6.onrender.com/songs', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        title: newSuggestion.value.title,
-        artist: newSuggestion.value.artist,
-        mood: newSuggestionMood.value
-      })
-    })
-    alert('Danke für deinen Vorschlag!')
-    newSuggestion.value = { title: '', artist: '' }
-    newSuggestionMood.value = 'happy'
-    showForm.value = false
-  } catch (error) {
-    console.error('Fehler beim Vorschlag-Senden:', error)
+    const res = await fetch('https://soundmood-webtech-6.onrender.com/entries/week')
+    weekEntries.value = await res.json()
+  } catch (err) {
+    console.error('Fehler beim Laden der Wochenstimmungen:', err)
   }
 }
+
+onMounted(() => {
+  fetchWeekEntries()
+})
 </script>
 
 <template>
-  <div class="home">
-    <h2>🎵 Wie fühlst du dich heute?</h2>
-
-    <div class="mood-buttons">
-      <button
-        v-for="mood in moods"
-        :key="mood"
-        @click="selectedMood = mood; fetchSongsByMood()"
-        :class="{ active: selectedMood === mood }"
-      >
-        {{ mood }}
-      </button>
-    </div>
-
-    <section v-if="songs.length > 0">
-      <h3>🔊 Passende Songs für "{{ selectedMood }}"</h3>
-      <ul class="song-list">
-        <li v-for="song in songs" :key="song.title">
-          <strong>{{ song.title }}</strong> von {{ song.artist }}
-        </li>
-      </ul>
-    </section>
-
-    <p v-else-if="selectedMood" class="empty">Keine Songs gefunden für "{{ selectedMood }}".</p>
-
-    <hr />
-
-    <section class="vorschlag">
-      <button @click="showForm = !showForm">
-        {{ showForm ? 'Abbrechen' : 'Songvorschlag machen' }}
-      </button>
-
-      <form v-if="showForm" @submit.prevent="submitSuggestion">
-        <input v-model="newSuggestion.title" placeholder="🎶 Songtitel" required />
-        <input v-model="newSuggestion.artist" placeholder="🎤 Künstler" required />
-        <select v-model="newSuggestionMood">
-          <option v-for="m in moods" :key="m" :value="m">{{ m }}</option>
-        </select>
-        <button type="submit" class="submit-button">Absenden</button>
-      </form>
-    </section>
+  <div class="week">
+    <h2>🗓 Deine Stimmungen dieser Woche</h2>
+    <ul v-if="weekEntries.length">
+      <li v-for="entry in weekEntries" :key="entry.date">
+        {{ getDayName(entry.date) }} – {{ entry.mood }} – {{ entry.song.title }} ({{ entry.song.artist }})
+      </li>
+    </ul>
+    <p v-else>Keine Einträge für diese Woche.</p>
   </div>
 </template>
 
 <style scoped>
-.home {
-  max-width: 800px;
-  margin: 0 auto;
+.week {
   padding: 2rem;
-  text-align: center;
-  color: #333;
+  max-width: 600px;
+  margin: 0 auto;
 }
 
-h2, h3 {
-  margin-bottom: 1rem;
-}
-
-.mood-buttons {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  justify-content: center;
-  margin-bottom: 2rem;
-}
-
-button {
-  padding: 0.6rem 1.2rem;
-  font-size: 1rem;
-  border: none;
-  border-radius: 6px;
-  background-color: #ff6b9e;
-  color: white;
-  font-weight: bold;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-  min-width: 110px;
-  text-transform: capitalize;
-}
-
-button:hover {
-  background-color: #e05589;
-}
-
-button.active {
-  background-color: #ff85ad;
-}
-
-.song-list {
-  list-style: none;
-  padding: 0;
-  margin-top: 1rem;
-}
-
-.song-list li {
-  margin-bottom: 0.7rem;
-}
-
-.empty {
-  margin-top: 1rem;
-  color: #999;
-}
-
-form {
-  margin-top: 1.5rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  align-items: center;
-}
-
-input, select {
-  padding: 0.6rem;
-  width: 250px;
-  font-size: 1rem;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-}
-
-.submit-button {
-  background-color: #ff6b9e;
-  color: white;
-}
-
-hr {
-  margin: 3rem 0 2rem;
-  border: none;
-  border-top: 1px solid #eee;
+li {
+  margin: 0.5rem 0;
 }
 </style>

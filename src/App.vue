@@ -1,3 +1,7 @@
+<script setup lang="ts">
+import { RouterView, RouterLink } from 'vue-router'
+</script>
+
 <template>
   <header>
     <h1>🎵 SoundMood</h1>
@@ -6,47 +10,30 @@
       <RouterLink to="/week">Meine Woche</RouterLink>
     </nav>
   </header>
+
   <main>
     <RouterView />
   </main>
 </template>
 
-<script setup lang="ts">
-import { RouterView, RouterLink } from 'vue-router'
-</script>
-
 <style scoped>
-:root {
-  --rosa: #ff6b9e;
-  --rosa-dark: #e05589;
-  --bg: #fefefe;
-  --text: #333;
-}
-
-body {
-  font-family: 'Helvetica Neue', sans-serif;
-  background-color: var(--bg);
-  color: var(--text);
-}
-
 header {
-  background-color: var(--rosa);
+  padding: 1rem;
+  background-color: #42b983;
   color: white;
-  padding: 1rem 2rem;
   text-align: center;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
 nav {
   margin-top: 1rem;
   display: flex;
   justify-content: center;
-  gap: 1.5rem;
+  gap: 2rem;
 }
 
 a {
-  text-decoration: none;
   color: white;
+  text-decoration: none;
   font-weight: bold;
 }
 
@@ -56,7 +43,5 @@ a.router-link-exact-active {
 
 main {
   padding: 2rem;
-  max-width: 1000px;
-  margin: 0 auto;
 }
 </style>
