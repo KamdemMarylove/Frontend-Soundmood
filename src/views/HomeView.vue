@@ -1,6 +1,12 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 
+// Dynamische URL für lokal/Render
+const backendBaseUrl = window.location.hostname.includes('localhost')
+  ? 'http://localhost:8080'
+  : 'https://soundmood-webtech-6.onrender.com'
+
+// Interfaces & Refs
 interface Song {
   title: string
   artist: string
@@ -15,14 +21,17 @@ const showForm = ref(false)
 const newSuggestion = ref({ title: '', artist: '' })
 const newSuggestionMood = ref('happy')
 
+// Songs passend zur Stimmung vom Backend holen
 const fetchSongsByMood = async () => {
   if (!selectedMood.value) return
   try {
-    const res = await fetch(`https://soundmood-webtech-6.onrender.com/songs?mood=${selectedMood.value}`)
+    const res = await fetch(`${backendBaseUrl}/songs?mood=${selectedMood.value}`)
     const data = await res.json()
     songs.value = data
+
+    // Wenn Song gefunden, Mood-Entry speichern
     if (data.length > 0) {
-      await fetch('https://soundmood-webtech-6.onrender.com/entries', {
+      await fetch(`${backendBaseUrl}/entries`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ mood: selectedMood.value, song: data[0] })
@@ -33,9 +42,10 @@ const fetchSongsByMood = async () => {
   }
 }
 
+// Songvorschlag absenden
 const submitSuggestion = async () => {
   try {
-    await fetch('https://soundmood-webtech-6.onrender.com/songs', {
+    await fetch(`${backendBaseUrl}/songs`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -106,8 +116,7 @@ const submitSuggestion = async () => {
   padding: 2rem;
   border-radius: 12px;
   box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-  margin-top: 1rem; /* kleiner Abstand */
-
+  margin-top: 1rem;
 }
 
 .button-group {
