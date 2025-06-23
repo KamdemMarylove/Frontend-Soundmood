@@ -7,7 +7,7 @@ interface Song {
   mood: string
 }
 
-const moods = ['happy', 'sad', 'energetic', 'relaxed', 'holy', 'outgoing']
+const moods = ['happy', 'sad', 'energetic', 'relaxed', 'outgoing']
 const selectedMood = ref('')
 const songs = ref<Song[]>([])
 
