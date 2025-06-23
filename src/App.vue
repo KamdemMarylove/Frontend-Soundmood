@@ -13,8 +13,9 @@ const songs = ref<Song[]>([])
 
 const showForm = ref(false)
 const newSuggestion = ref({ title: '', artist: '' })
+const newSuggestionMood = ref('happy') // dropdown-Auswahl
 
-// 🧠 Stimmung speichern
+// Stimmungseintrag speichern
 const saveMoodEntry = async (mood: string, song: Song) => {
   try {
     await fetch('https://soundmood-webtech-6.onrender.com/entries', {
@@ -31,7 +32,7 @@ const saveMoodEntry = async (mood: string, song: Song) => {
   }
 }
 
-// 🎧 Songs laden
+// Songs fetchen
 const fetchSongsByMood = async () => {
   if (!selectedMood.value) return
   try {
@@ -47,7 +48,7 @@ const fetchSongsByMood = async () => {
   }
 }
 
-// 💌 Songvorschlag senden
+// Vorschlag senden
 const submitSuggestion = async () => {
   try {
     await fetch('https://soundmood-webtech-6.onrender.com/songs', {
@@ -56,18 +57,19 @@ const submitSuggestion = async () => {
       body: JSON.stringify({
         title: newSuggestion.value.title,
         artist: newSuggestion.value.artist,
-        mood: 'user'
+        mood: newSuggestionMood.value
       })
     })
     alert('Danke für deinen Vorschlag! 🎉')
     newSuggestion.value = { title: '', artist: '' }
+    newSuggestionMood.value = 'happy'
     showForm.value = false
   } catch (error) {
     console.error('Fehler beim Vorschlag-Senden:', error)
   }
 }
 
-// 📦 Seite lädt mit "happy"-Mood
+// Beim Laden: automatisch "happy" laden
 onMounted(() => {
   selectedMood.value = 'happy'
   fetchSongsByMood()
@@ -112,6 +114,11 @@ onMounted(() => {
       <form v-if="showForm" @submit.prevent="submitSuggestion">
         <input v-model="newSuggestion.title" placeholder="Songtitel" required />
         <input v-model="newSuggestion.artist" placeholder="Künstler" required />
+        <select v-model="newSuggestionMood" required>
+          <option v-for="mood in moods" :key="mood" :value="mood">
+            {{ mood }}
+          </option>
+        </select>
         <button type="submit">Vorschlag senden</button>
       </form>
     </section>
@@ -167,7 +174,7 @@ form {
   width: 100%;
 }
 
-input {
+input, select {
   padding: 0.5rem;
   font-size: 1rem;
 }
