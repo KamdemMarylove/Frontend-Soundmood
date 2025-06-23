@@ -25,6 +25,7 @@ const newSuggestion = ref({ title: '', artist: '' })
 const newSuggestionMood = ref('happy')
 
 const weekEntries = ref<MoodEntry[]>([])
+const showWeek = ref(false)
 
 // Stimmung speichern
 const saveMoodEntry = async (mood: string, song: Song) => {
@@ -153,13 +154,21 @@ onMounted(() => {
 
     <hr />
 
-    <section v-if="weekEntries.length">
-      <h2>🗓 Deine Stimmungen diese Woche</h2>
-      <ul>
-        <li v-for="entry in weekEntries" :key="entry.date">
-          {{ getDayName(entry.date) }} – {{ entry.mood }} – {{ entry.song.title }} ({{ entry.song.artist }})
-        </li>
-      </ul>
+    <section>
+      <button @click="showWeek = !showWeek">
+        {{ showWeek ? 'Auswertung verbergen' : 'Meine Woche anzeigen' }}
+      </button>
+
+      <div v-if="showWeek && weekEntries.length > 0" class="week-summary">
+        <h2>🗓 Deine Stimmungen diese Woche</h2>
+        <ul>
+          <li v-for="entry in weekEntries" :key="entry.date">
+            {{ getDayName(entry.date) }} – {{ entry.mood }} – {{ entry.song.title }} ({{ entry.song.artist }})
+          </li>
+        </ul>
+      </div>
+
+      <p v-else-if="showWeek && weekEntries.length === 0">Noch keine Stimmungen gespeichert.</p>
     </section>
   </main>
 </template>
@@ -226,5 +235,13 @@ ul {
 
 li {
   margin-bottom: 0.5rem;
+}
+
+.week-summary {
+  margin-top: 1rem;
+  padding: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background: #f9f9f9;
 }
 </style>
