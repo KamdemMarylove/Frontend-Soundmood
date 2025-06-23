@@ -1,22 +1,7 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
-import { Bar } from 'vue-chartjs'
-import {
-  Chart as ChartJS,
-  Title,
-  Tooltip,
-  Legend,
-  BarElement,
-  CategoryScale,
-  LinearScale
-} from 'chart.js'
+import { ref, onMounted } from 'vue'
 
-// Registrierung der ChartJS-Komponenten
-ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale)
-
-// ✨ TypeScript Interface MIT id-Feld
 interface MoodEntry {
-  id: number
   date: string
   mood: string
   song: {
@@ -26,77 +11,46 @@ interface MoodEntry {
 }
 
 const weekEntries = ref<MoodEntry[]>([])
-const moodCounts = ref<Record<string, number>>({})
 
-// Daten vom Backend holen
+const getDayName = (dateStr: string) => {
+  const date = new Date(dateStr)
+  return date.toLocaleDateString('de-DE', { weekday: 'long' })
+}
+
 const fetchWeekEntries = async () => {
   try {
     const res = await fetch('https://soundmood-webtech-6.onrender.com/entries/week')
-    const data: MoodEntry[] = await res.json()
-    weekEntries.value = data
-
-    const counts: Record<string, number> = {}
-    data.forEach(entry => {
-      counts[entry.mood] = (counts[entry.mood] || 0) + 1
-    })
-    moodCounts.value = counts
+    weekEntries.value = await res.json()
   } catch (err) {
-    console.error('Fehler beim Laden:', err)
+    console.error('Fehler beim Laden der Wochenstimmungen:', err)
   }
 }
-onMounted(fetchWeekEntries)
 
-// Daten für Diagramm vorbereiten
-const chartData = computed(() => ({
-  labels: Object.keys(moodCounts.value),
-  datasets: [{
-    label: 'Stimmungen diese Woche',
-    backgroundColor: '#ff6b9e',
-    data: Object.values(moodCounts.value)
-  }]
-}))
-
-const chartOptions = {
-  responsive: true,
-  plugins: {
-    legend: { display: false },
-    title: {
-      display: true,
-      text: 'Deine Stimmungsauswertung 🧠'
-    }
-  }
-}
+onMounted(() => {
+  fetchWeekEntries()
+})
 </script>
 
 <template>
   <div class="week">
-    <h2>🗓 Wochenübersicht</h2>
-
-    <Bar :data="chartData" :options="chartOptions" />
-
-    <ul>
-      <li v-for="entry in weekEntries" :key="entry.id">
-        {{ new Date(entry.date).toLocaleDateString('de-DE') }} –
-        <strong>{{ entry.mood }}</strong> –
-        {{ entry.song.title }} von {{ entry.song.artist }}
+    <h2>🗓 Deine Stimmungen dieser Woche</h2>
+    <ul v-if="weekEntries.length">
+      <li v-for="entry in weekEntries" :key="entry.date">
+        {{ getDayName(entry.date) }} – {{ entry.mood }} – {{ entry.song.title }} ({{ entry.song.artist }})
       </li>
     </ul>
+    <p v-else>Keine Einträge für diese Woche.</p>
   </div>
 </template>
 
 <style scoped>
 .week {
-  max-width: 800px;
-  margin: 0 auto;
   padding: 2rem;
-  text-align: center;
+  max-width: 600px;
+  margin: 0 auto;
 }
 
-ul {
-  text-align: left;
-  margin-top: 2rem;
-  font-size: 1rem;
-  list-style: none;
-  padding: 0;
+li {
+  margin: 0.5rem 0;
 }
 </style>
