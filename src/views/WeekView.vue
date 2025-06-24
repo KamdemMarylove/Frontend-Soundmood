@@ -14,13 +14,16 @@ import {
 ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale)
 
 interface MoodEntry {
+  id: number
   date: string
   mood: string
+  liked: boolean
   song: {
     title: string
     artist: string
   }
 }
+
 
 const backendBaseUrl = window.location.hostname.includes('localhost')
   ? 'http://localhost:8080'
@@ -52,6 +55,17 @@ const moodCounts = computed(() => {
   return counts
 })
 
+const markAsFavorite = async (entryId: number) => {
+  try {
+    await fetch(`${backendBaseUrl}/entries/${entryId}/like`, {
+      method: 'PATCH',
+    })
+    fetchWeekEntries()  // Neu laden
+  } catch (err) {
+    console.error('Fehler beim Liken:', err)
+  }
+}
+
 const chartData = computed(() => ({
   labels: Object.keys(moodCounts.value),
   datasets: [
@@ -71,7 +85,11 @@ const chartOptions = {
   },
   scales: {
     y: {
-      beginAtZero: true,
+      min: 1,              // ⬅️ Startwert der Skala
+      max: 7,              // ⬅️ Endwert der Skala
+      ticks: {
+        stepSize: 1       // ⬅️ Schrittweite (optional für gleichmäßige Abstufung)
+      },
       title: {
         display: true,
         text: 'Anzahl'
@@ -79,6 +97,7 @@ const chartOptions = {
     }
   }
 }
+
 
 onMounted(() => {
   fetchWeekEntries()
@@ -96,9 +115,13 @@ onMounted(() => {
     </button>
 
     <ul v-if="showList && weekEntries.length > 0">
-      <li v-for="entry in weekEntries" :key="entry.date + entry.mood">
-        {{ getDayName(entry.date) }} – {{ entry.mood }} – {{ entry.song.title }} ({{ entry.song.artist }})
+      <li v-for="entry in weekEntries" :key="entry.id">
+        {{ getDayName(entry.date) }} – {{ entry.mood }} –
+        {{ entry.song.title }} ({{ entry.song.artist }})
+        <span v-if="entry.liked">⭐</span>
+        <button v-else @click="markAsFavorite(entry.id)">⭐ Markieren</button>
       </li>
+
     </ul>
 
     <p v-else-if="!weekEntries.length">Keine Einträge für diese Woche.</p>
@@ -139,5 +162,6 @@ ul {
 
 li {
   margin: 0.5rem 0;
+
 }
 </style>

@@ -1,17 +1,25 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 
-// Dynamische URL für lokal/Render
-const backendBaseUrl = window.location.hostname.includes('localhost')
-  ? 'http://localhost:8080'
-  : 'https://soundmood-webtech-6.onrender.com'
-
-// Interfaces & Refs
 interface Song {
   title: string
   artist: string
   mood: string
 }
+
+interface MoodEntry {
+  date: string
+  mood: string
+  liked: boolean
+  song: {
+    title: string
+    artist: string
+  }
+}
+
+const backendBaseUrl = window.location.hostname.includes('localhost')
+  ? 'http://localhost:8080'
+  : 'https://soundmood-webtech-6.onrender.com'
 
 const moods = ['happy', 'sad', 'energetic', 'relaxed', 'outgoing']
 const selectedMood = ref('')
@@ -21,7 +29,10 @@ const showForm = ref(false)
 const newSuggestion = ref({ title: '', artist: '' })
 const newSuggestionMood = ref('happy')
 
-// Songs passend zur Stimmung vom Backend holen
+// Lieblingssongs
+const showFavorites = ref(false)
+const favoriteEntries = ref<MoodEntry[]>([])
+
 const fetchSongsByMood = async () => {
   if (!selectedMood.value) return
   try {
@@ -29,7 +40,6 @@ const fetchSongsByMood = async () => {
     const data = await res.json()
     songs.value = data
 
-    // Wenn Song gefunden, Mood-Entry speichern
     if (data.length > 0) {
       await fetch(`${backendBaseUrl}/entries`, {
         method: 'POST',
@@ -42,7 +52,6 @@ const fetchSongsByMood = async () => {
   }
 }
 
-// Songvorschlag absenden
 const submitSuggestion = async () => {
   try {
     await fetch(`${backendBaseUrl}/songs`, {
@@ -62,6 +71,20 @@ const submitSuggestion = async () => {
     console.error('Fehler beim Senden:', err)
   }
 }
+
+const fetchFavorites = async () => {
+  try {
+    const res = await fetch(`${backendBaseUrl}/entries`)
+    const all = await res.json()
+    favoriteEntries.value = all.filter((e: MoodEntry) => e.liked)
+  } catch (err) {
+    console.error('Fehler beim Laden der Lieblingssongs:', err)
+  }
+}
+
+onMounted(() => {
+  fetchFavorites()
+})
 </script>
 
 <template>
@@ -92,6 +115,7 @@ const submitSuggestion = async () => {
 
     <hr />
 
+    <!-- Songvorschlag Formular -->
     <button class="suggest-button" @click="showForm = !showForm">
       {{ showForm ? 'Abbrechen' : 'Hilf uns mit deinem Vorschlag' }}
     </button>
@@ -104,6 +128,21 @@ const submitSuggestion = async () => {
       </select>
       <button type="submit">Absenden</button>
     </form>
+
+
+
+    <!-- Lieblingssongs -->
+    <button class="suggest-button" @click="showFavorites = !showFavorites">
+      {{ showFavorites ? 'Lieblingssongs verbergen' : 'Lieblingssongs anzeigen' }}
+    </button>
+
+    <ul v-if="showFavorites && favoriteEntries.length > 0">
+      <li v-for="entry in favoriteEntries" :key="entry.date">
+        ⭐ {{ entry.song.title }} – {{ entry.song.artist }} ({{ entry.mood }})
+      </li>
+    </ul>
+
+    <p v-if="showFavorites && favoriteEntries.length === 0">Noch keine Lieblingssongs gespeichert.</p>
   </div>
 </template>
 
@@ -125,6 +164,10 @@ const submitSuggestion = async () => {
   flex-wrap: wrap;
   gap: 0.8rem;
   margin: 2rem 0;
+}
+
+.suggest-button{
+  margin: 10px;
 }
 
 button {
