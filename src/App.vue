@@ -57,6 +57,9 @@ main {
   min-height: 80vh;
   background-color: #fafafa;
 }
+*{
+  color:black
+}
 </style>
 
 

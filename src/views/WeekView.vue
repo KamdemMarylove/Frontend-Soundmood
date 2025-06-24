@@ -22,62 +22,67 @@ interface MoodEntry {
   }
 }
 
+const backendBaseUrl = window.location.hostname.includes('localhost')
+  ? 'http://localhost:8080'
+  : 'https://soundmood-webtech-6.onrender.com'
+
 const weekEntries = ref<MoodEntry[]>([])
-const moodCounts = ref<Record<string, number>>({})
+const showList = ref(false)
+
+const fetchWeekEntries = async () => {
+  try {
+    const res = await fetch(`${backendBaseUrl}/entries/week`)
+    weekEntries.value = await res.json()
+  } catch (err) {
+    console.error('Fehler beim Laden der Wochenstimmungen:', err)
+  }
+}
 
 const getDayName = (dateStr: string) => {
   const date = new Date(dateStr)
   return date.toLocaleDateString('de-DE', { weekday: 'long' })
 }
 
-const fetchWeekEntries = async () => {
-  try {
-    const res = await fetch('https://soundmood-webtech-6.onrender.com/entries/week')
-    const data: MoodEntry[] = await res.json()
-    weekEntries.value = data
-
-    const counts: Record<string, number> = {}
-    data.forEach(entry => {
-      counts[entry.mood] = (counts[entry.mood] || 0) + 1
-    })
-    moodCounts.value = counts
-  } catch (err) {
-    console.error('Fehler beim Laden der Wochenstimmungen:', err)
-  }
-}
-
-onMounted(fetchWeekEntries)
+// Daten für Chart vorbereiten
+const moodCounts = computed(() => {
+  const counts: Record<string, number> = {}
+  weekEntries.value.forEach(e => {
+    counts[e.mood] = (counts[e.mood] || 0) + 1
+  })
+  return counts
+})
 
 const chartData = computed(() => ({
   labels: Object.keys(moodCounts.value),
-  datasets: [{
-    label: 'Stimmungen diese Woche',
-    backgroundColor: '#ff9ccf',
-    data: Object.values(moodCounts.value)
-  }]
+  datasets: [
+    {
+      label: 'Anzahl pro Stimmung',
+      data: Object.values(moodCounts.value),
+      backgroundColor: '#ff6b9e'
+    }
+  ]
 }))
 
 const chartOptions = {
   responsive: true,
   plugins: {
     legend: { display: false },
-    title: {
-      display: true,
-      text: 'Deine Stimmungsauswertung 🧠'
-    }
+    title: { display: true, text: 'Stimmungen der Woche' }
   },
   scales: {
     y: {
       beginAtZero: true,
-      ticks: {
-        stepSize: 1, // 👉 Nur ganze Zahlen anzeigen
-        precision: 0 // 👉 keine Nachkommastellen
-      },
-      suggestedMax: Math.max(...Object.values(moodCounts.value), 5) + 1
+      title: {
+        display: true,
+        text: 'Anzahl'
+      }
     }
   }
 }
 
+onMounted(() => {
+  fetchWeekEntries()
+})
 </script>
 
 <template>
@@ -86,45 +91,53 @@ const chartOptions = {
 
     <Bar :data="chartData" :options="chartOptions" />
 
-    <ul v-if="weekEntries.length">
-      <li v-for="entry in weekEntries" :key="entry.date">
-        {{ getDayName(entry.date) }} – <strong>{{ entry.mood }}</strong> – {{ entry.song.title }} ({{ entry.song.artist }})
+    <button class="toggle-button" @click="showList = !showList">
+      {{ showList ? 'Songs verbergen' : 'Songs der Woche anzeigen' }}
+    </button>
+
+    <ul v-if="showList && weekEntries.length > 0">
+      <li v-for="entry in weekEntries" :key="entry.date + entry.mood">
+        {{ getDayName(entry.date) }} – {{ entry.mood }} – {{ entry.song.title }} ({{ entry.song.artist }})
       </li>
     </ul>
-    <p v-else>Keine Einträge für diese Woche.</p>
+
+    <p v-else-if="!weekEntries.length">Keine Einträge für diese Woche.</p>
   </div>
 </template>
 
 <style scoped>
 .week {
+  background: white;
   padding: 2rem;
-  max-width: 800px;
+  border-radius: 10px;
+  max-width: 700px;
   margin: 0 auto;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
   text-align: center;
 }
 
+.toggle-button {
+  margin: 2rem auto 1rem;
+  padding: 0.6rem 1.2rem;
+  background-color: #ffd4e2;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.toggle-button:hover {
+  background-color: #ff8cb7;
+}
+
 ul {
-  margin-top: 2rem;
-  text-align: left;
+  margin-top: 1rem;
   list-style: none;
   padding: 0;
-  font-size: 1rem;
+  text-align: left;
 }
 
 li {
   margin: 0.5rem 0;
 }
-.week {
-  padding: 2rem;
-  max-width: 700px;
-  margin: 2rem auto 0 auto;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-}
-
-li {
-  margin: 0.5rem 0;
-}
-
 </style>
