@@ -85,8 +85,8 @@ const chartOptions = {
   },
   scales: {
     y: {
-      min: 1,              // ⬅️ Startwert der Skala
-      max: 7,              // ⬅️ Endwert der Skala
+      min: 0,
+      max: Math.max(...Object.values(moodCounts.value), 5),              // ⬅️ Endwert der Skala
       ticks: {
         stepSize: 1       // ⬅️ Schrittweite (optional für gleichmäßige Abstufung)
       },
@@ -107,6 +107,7 @@ onMounted(() => {
 <template>
   <div class="week">
     <h2>🗓 Deine Stimmungen dieser Woche</h2>
+
 
     <Bar :data="chartData" :options="chartOptions" />
 
